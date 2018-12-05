@@ -155,15 +155,6 @@ class MolecularDynamics {
 			for( int i = 0; i < param.n_p; i++ ) {
 				for( int j = 0; j < param.dim; j++ ) {
 
-					/*
-					if ( x( i + j*param.n_p ) > ubnd(j) ) {
-						x( i + j*param.n_p ) -= len(j);
-					}
-
-					if ( x( i + j*param.n_p ) < lbnd(j) ) {
-						x( i + j*param.n_p ) += len(j);
-					}
-					*/
 
 					x(i+j*param.n_p) -= len(j) * 
 					std::floor( ( x(i+j*param.n_p)-lbnd(j) ) / len(j) );
@@ -200,87 +191,3 @@ class MolecularDynamics {
 } // namespace FIREpp
 
 #endif // _MOLECULAR_DYNAMICS_H_
-
-/*
-
-		//! Velocity verlet integration with no boundary conditions
-		template <typename Foo>
-		static void VelocityVerlet_NBC( Foo &f, Scalar &fx,
-				Vector &x, Vector &v, Vector &grad,
-				const Scalar &dt, const Scalar &alpha,
-				const Vector &m,
-				const FIREParam<Scalar> &param ) {
-
-			Vector xi(3);
-			Vector vi(3);
-			Vector Fi(3);
-		       	Vector ai(3);
-
-			// ---------------------------------------------------------------------
-			// Perform the first set of position/velocity updates 
-			// ---------------------------------------------------------------------
-			for( int i = 0; i < param.n_p; i++ ) {
-
-				// Find x(t), v(t), F(t)
-				for( int j = 0; j < param.dim; j++ ) {
-
-					xi(j) = x(i+j*param.n_p);
-					vi(j) = v(i+j*param.n_p);
-					Fi(j) = Scalar(-1.0)*grad(i+j*param.n_p);
-
-				}
-
-				// Calculate a(t)
-				ai = Fi / m(i);
-
-				// Calculate x(t+dt)
-				xi = xi + dt * vi + dt * dt * ai / Scalar(2.0);
-
-				// Partially v(t)<-v*(t)
-				vi = vi + dt * ai / Scalar(2.0);
-
-				// Update position vector
-				for( int j = 0; j < param.dim; j++ ) {
-
-					x(i+j*param.n_p) = xi(j);
-					v(i+j*param.n_p) = vi(j);
-				}
-
-			}
-
-			// ---------------------------------------------------------------------
-			// Update gradient vector
-			// ---------------------------------------------------------------------
-			fx = f( x, grad );
-
-			// ---------------------------------------------------------------------
-			// Perform final velocity updates
-			// ---------------------------------------------------------------------
-			for( int i = 0; i < param.n_p; i++ ) {
-
-				// Find v*(t), F(t+dt)
-				for( int j = 0; j < param.dim; j++ ) {
-
-					vi(j) = v(i+j*param.n_p);
-					Fi(j) = Scalar(-1.0)*grad(i+j*param.n_p);
-
-				}
-
-				// Calcualte a(t+dt)
-				ai = Fi / m(i);
-
-				// Calculate v(t+dt)
-				vi = vi + dt * ai / Scalar(2.0);
-
-				// Update velocity vector
-				for( int j = 0; j < param.dim; j++ ) {
-
-					v(i+j*param.n_p) = vi(j);
-
-				}
-
-			}
-			
-		};
-
-*/

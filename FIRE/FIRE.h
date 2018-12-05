@@ -177,7 +177,7 @@ class FIRESolver {
 				xnorm = x.norm();
 				gnorm = m_grad.norm();
 
-           		// Display iterative updates
+ 	          		// Display iterative updates
 				if (m_param.iter_display) {
 
          				std::cout << "(" << std::setw(2) << k << ")"
