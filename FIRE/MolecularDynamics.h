@@ -73,6 +73,7 @@ class MolecularDynamics {
 		/// \param m 		The vector of particle masses
 		///
 		/// \param param	Parameters for the FIRE algorithm
+		///
 		template <typename Foo>
 		static void VelocityVerlet( Foo &f, Scalar &fx,
 				Vector &x, Vector &v, Vector &grad,
@@ -180,11 +181,53 @@ class MolecularDynamics {
 				const Vector &m,
 				const FIREParam<Scalar> &param ) {
 
-			std::cerr << "This functionality is currently unsupported!" << std::endl;
+			// Extract bounding box
+			Vector lbnd = param.lbnd;
+			Vector ubnd = param.ubnd;
+			Vector len = ubnd - lbnd;
+
+			// Perform the first set of position/velocity updates
+			Vector a = -( grad.array() / m.array() ).matrix();
+			x += dt * v + dt * dt * a / Scalar(2.0);
+			v += dt * a / Scalar(2.0);
+
+			// Reset positions and velocities within the hard wall bounding box
+			for( int i = 0; i < param.n_p; i++ ) {
+				for( int j = 0; j < param.dim; j++ ) {
+
+					Scalar dx = Scalar(0.0);
+					if ( x(i+j*param.n_p) > ubnd(j) ) {
+
+						dx = x(i+j*param.n_p) - ubnd(j);
+						dx -= len(j) *
+						       	std::floor( (dx-lbnd(j)) / len(j) );
+						x(i+j*param.n_p) = ubnd(j) - dx;
+
+						v(i+j*param.n_p) *= Scalar(-1.0);
+
+					} else if ( x(i+j*param.n_p) < lbnd(j) ) {
+
+						dx = lbnd(j) - x(i+j*param.n_p);
+						dx -= len(j) *
+							std::floor( (dx-lbnd(j)) / len(j) );
+						x(i+j*param.n_p) = lbnd(j) + dx;
+
+						v(i+j*param.n_p) *= Scalar(-1.0);
+
+					}
+
+				}
+			}
+
+			// Update gradient vector
+			fx = f(x, grad);
+
+			// Perform final velocity updates
+			a = -( grad.array() / m.array() ).matrix();
+			v += dt * a / Scalar(2.0);
 
 		};
 
-		
 
 };
 
