@@ -199,8 +199,7 @@ class MolecularDynamics {
 					if ( x(i+j*param.n_p) > ubnd(j) ) {
 
 						dx = x(i+j*param.n_p) - ubnd(j);
-						dx -= len(j) *
-						       	std::floor( (dx-lbnd(j)) / len(j) );
+						dx -= len(j) * std::floor( dx / len(j) );
 						x(i+j*param.n_p) = ubnd(j) - dx;
 
 						v(i+j*param.n_p) *= Scalar(-1.0);
@@ -208,8 +207,7 @@ class MolecularDynamics {
 					} else if ( x(i+j*param.n_p) < lbnd(j) ) {
 
 						dx = lbnd(j) - x(i+j*param.n_p);
-						dx -= len(j) *
-							std::floor( (dx-lbnd(j)) / len(j) );
+						dx -= len(j) * std::floor( dx / len(j) );
 						x(i+j*param.n_p) = lbnd(j) + dx;
 
 						v(i+j*param.n_p) *= Scalar(-1.0);
