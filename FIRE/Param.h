@@ -43,7 +43,7 @@ namespace FIREpp {
 
 ///
 /// 	\ingroup Enumerations
-/// 	
+///
 ///	The enumeration of the types of boundary conditions
 ///
 enum BOUNDARY_CONDITIONS {
@@ -76,7 +76,7 @@ class FIREParam {
 		/// Upon 'uphill motion', the system is frozen ( v <- 0 ).
 		/// Requiring the system to wait a small number of steps before
 		/// accelerating again is important for stability. Should be
-		/// larget than one to maintain at least a few smooth steps
+		/// larger than one to maintain at least a few smooth steps
 		/// after freezing.
 		///
 		int nmin;
@@ -116,7 +116,7 @@ class FIREParam {
 		///
 		/// The maximum allowable timestep.  Highly system dependent.
 		/// If molecular dynamics simulations of the system are available,
-		/// the maximum time step should be approximately ten times the 
+		/// the maximum time step should be approximately ten times the
 		/// MD timestep.
 		///
 		Scalar dt_max;
@@ -181,7 +181,6 @@ class FIREParam {
 		/// Iterative display option
 		///
 		bool iter_display;
-		
 
 	public:
 
@@ -204,7 +203,7 @@ class FIREParam {
 			past = 0;
 			delta = Scalar(0);
 			iter_display = false;
-			
+
 			lbnd.resize(dim);
 			lbnd = Vector::Constant(dim, Scalar(0));
 

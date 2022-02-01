@@ -1,4 +1,4 @@
-/*********************************************************************************************** 
+/***********************************************************************************************
  * Copyright (C) 2018 Dillon Cislo
  *
  * This file is part of FIRE++.
@@ -90,20 +90,20 @@ class MolecularDynamics {
 			// Choose appropriate integration algorithm
 			switch( param.boundary_conditions ) {
 
-				case FIRE_NO_BOUNDARY_CONDITIONS : 
-					
+				case FIRE_NO_BOUNDARY_CONDITIONS :
+
 					VelocityVerlet_NBC( f, fx,
 					x, v, grad, dt, alpha, m, param );
 					break;
 
 				case FIRE_PERIODIC_BOUNDARY_CONDITIONS :
-					
+
 					VelocityVerlet_PBC( f, fx,
 					x, v, grad, dt, alpha, m, param );
 					break;
 
 				case FIRE_HARD_BOUNDARY_CONDITIONS :
-					
+
 					VelocityVerlet_HBC( f, fx,
 					x, v, grad, dt, alpha, m, param );
 					break;
@@ -120,7 +120,7 @@ class MolecularDynamics {
 				const Vector &m,
 				const FIREParam<Scalar> &param ) {
 
-			// Perform the first set of position/velocity updates 
+			// Perform the first set of position/velocity updates
 			Vector a = -( grad.array() / m.array() ).matrix();
 			x +=  dt * v + dt * dt * a / Scalar(2.0);
 			v +=  dt * a / Scalar(2.0);
@@ -131,7 +131,7 @@ class MolecularDynamics {
 			// Perform final velocity updates
 			a = -( grad.array() / m.array() ).matrix();
 			v += dt * a / Scalar(2.0);
-			
+
 		};
 
 		//! Velocity verlet integration with periodic boundary conditions
@@ -147,7 +147,7 @@ class MolecularDynamics {
 			Vector ubnd = param.ubnd;
 			Vector len = ubnd - lbnd;
 
-			// Perform the first set of position/velocity updates 
+			// Perform the first set of position/velocity updates
 			Vector a = -( grad.array() / m.array() ).matrix();
 			x +=  dt * v + dt * dt * a / Scalar(2.0);
 			v +=  dt * a / Scalar(2.0);
@@ -156,12 +156,10 @@ class MolecularDynamics {
 			for( int i = 0; i < param.n_p; i++ ) {
 				for( int j = 0; j < param.dim; j++ ) {
 
-
-					x(i+j*param.n_p) -= len(j) * 
+					x(i+j*param.n_p) -= len(j) *
 					std::floor( ( x(i+j*param.n_p)-lbnd(j) ) / len(j) );
 
 				}
-
 			}
 
 			// Update gradient vector

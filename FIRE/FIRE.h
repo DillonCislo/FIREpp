@@ -34,6 +34,9 @@
 
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
+#include <cfloat>
+#include <cmath>
 
 #include <Eigen/Core>
 
@@ -55,21 +58,22 @@ class FIRESolver {
 		typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> Matrix;
 
 		const FIREParam<Scalar> &m_param;   // Parameters to control the FIRE algorithm
+
 		Vector 			m_fx;       // History of objective function values
 		Vector 			m_xp; 	    // Old x
 		Vector 			m_grad;     // New gradient
-		Vector        		m_gradp;    // Old gradient
+		Vector      m_gradp;    // Old gradient
 		Vector 			m_v;        // New velocity
 		Vector 			m_vp; 	    // Old velocity
 		Vector 			m_mass;     // Particle masses
-		bool 			m_userMass; // Check whether the user supplied masses
+		bool 		  	m_userMass; // Check whether the user supplied masses
 
 		inline void reset( int n ) {
-			
+
 			m_xp.resize(n);
 			m_grad.resize(n);
 			m_gradp.resize(n);
-			
+
 			m_v.resize(n);
 			m_v = Vector::Zero(n);
 			m_vp.resize(n);
@@ -107,7 +111,6 @@ class FIRESolver {
 
 		};
 
-
 		///
 		/// Minimizing a multivariate function using the FIRE algorithm
 		/// Exceptions will be thrown if error occurs.
@@ -127,7 +130,7 @@ class FIRESolver {
 			const int n = x.size();
 			const int fpast = m_param.past;
 			reset(n);
-			if (!m_userMass ) {
+			if ( !m_userMass ) {
 				m_mass.resize(n);
 				m_mass = Vector::Constant(n,1,Scalar(1.0));
 			}
@@ -138,24 +141,39 @@ class FIRESolver {
 			Scalar gnorm = m_grad.norm();
 			if( fpast > 0 )
 				m_fx[0] = fx;
-            
-            int k = 0;
-            
-            // Display iterative updates
-            if (m_param.iter_display) {
-                
-                std::cout << "(" << std::setw(2) << k << ")"
-                        << " ||dx|| = " << std::fixed << std::setw(10)
-                        << std::setprecision(7) << gnorm
-                        << " ||x|| = " << std::setprecision(4)
-                        << std::setw(6) << xnorm
-                        << " f(x) = " << std::setw(15) << std::setprecision(10)
-                        << fx << std::endl;
-                
-            }
+
+      int k = 0;
+
+      // Display iterative updates
+      if (m_param.iter_display) {
+
+        std::cout << "( 0)"
+          << " ||dx|| = " << std::scientific << std::setw(10)
+          << std::setprecision(5) << gnorm
+          << " ||x|| = " << std::setprecision(5)
+          << std::setw(10) << xnorm
+          << " f(x) = " << std::setw(10) << std::setprecision(5)
+          << fx << std::endl;
+
+      }
+
+      // Handle NaNs produced by the initial guess
+      if ( (fx != fx) || (xnorm != xnorm) || (gnorm != gnorm) )
+        throw std::invalid_argument("Initial guess generats NaNs");
+
+      // Handle Infs produced by the initial guess
+      if ( (std::isinf(fx)) || std::isinf(xnorm) || std::isinf(gnorm) )
+        throw std::invalid_argument("Initial guess generats Infs");
 
 			// Early exit if the initial x is already a minimizer
-			if( gnorm <= m_param.epsilon ) { return 1; }
+			if( gnorm <= m_param.epsilon ) {
+
+        if ( m_param.iter_display )
+          std::cout << "EARLY EXIT CONDITION: Gradient Norm" << std::endl;
+
+        return 1;
+
+      }
 
 			k++;
 			int steps_since_freeze = 0;
@@ -163,7 +181,7 @@ class FIRESolver {
 			Scalar alpha = m_param.alpha_start;
 
 			while( true ) {
-				
+
 				// Save the current x, v, and gradient
 				m_xp.noalias() = x;
 				m_gradp.noalias() = m_grad;
@@ -177,38 +195,56 @@ class FIRESolver {
 				xnorm = x.norm();
 				gnorm = m_grad.norm();
 
- 	          		// Display iterative updates
+ 	      // Display iterative updates
 				if (m_param.iter_display) {
 
-         				std::cout << "(" << std::setw(2) << k << ")"
-				         << " ||dx|| = " << std::fixed << std::setw(10)
-       	               		         << std::setprecision(7) << gnorm
-               	     		         << " ||x|| = " << std::setprecision(4)
-					 << std::setw(6) << xnorm
-                        	         << " f(x) = " << std::setw(15) << std::setprecision(10)
-                            	         << fx << std::endl;
+          std::cout << "(" << std::setw(2) << k << ")"
+            << " ||dx|| = " << std::scientific << std::setw(10)
+       	    << std::setprecision(5) << gnorm
+            << " ||x|| = " << std::setprecision(5)
+					  << std::setw(10) << xnorm
+            << " f(x) = " << std::setw(10) << std::setprecision(5)
+            << fx << std::endl;
 
 				}
 
 				// Convergence test -- gradient
-				if ( gnorm <= m_param.epsilon ) { return k; };
+				if ( gnorm <= m_param.epsilon ) {
+
+          if ( m_param.iter_display )
+            std::cout << "CONVERGENCE CRITERION: Gradient Norm" << std::endl;
+
+          return k;
+
+        }
 
 				// Convergence test -- objective function value
 				if ( fpast > 0 ) {
-					
+
 					if ( (k >= fpast) &&
 					(std::abs((m_fx[k % fpast]-fx)/fx) < m_param.delta) ) {
+
+            if ( m_param.iter_display )
+              std::cout << "CONVERGENCE CRITERION: Objective Function Value" << std::endl;
+
 						return k;
+
 					}
 
 					m_fx[ k % fpast ] = fx;
+
 				}
 
 				// Maximum number of iterations
 				if(m_param.max_iterations != 0 && k >= m_param.max_iterations) {
+
+          if ( m_param.iter_display )
+            std::cout << "CONVERGENCE CRITERION: Maximum Iteration Count" << std::endl;
+
 					return k;
+
 				}
-				
+
 				Scalar P = m_v.dot( -m_grad );
 
 				m_v = ( Scalar(1)-alpha ) * m_v +
@@ -222,6 +258,7 @@ class FIRESolver {
 						alpha = alpha * m_param.falpha;
 						dt = std::min( dt * m_param.finc,
 								m_param.dt_max );
+
 					}
 
 					steps_since_freeze++;
