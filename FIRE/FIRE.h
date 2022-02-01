@@ -159,14 +159,14 @@ class FIRESolver {
 
       // Handle NaNs produced by the initial guess
       if ( (fx != fx) || (xnorm != xnorm) || (gnorm != gnorm) )
-        throw std::invalid_argument("Initial guess generats NaNs");
+        throw std::invalid_argument("Initial guess generates NaNs");
 
       // Handle Infs produced by the initial guess
       if ( (std::isinf(fx)) || std::isinf(xnorm) || std::isinf(gnorm) )
-        throw std::invalid_argument("Initial guess generats Infs");
+        throw std::invalid_argument("Initial guess generates Infs");
 
 			// Early exit if the initial x is already a minimizer
-			if( gnorm <= m_param.epsilon ) {
+			if( gnorm <= m_param.epsilon || gnorm <= m_param.epsilon_rel * xnorm ) {
 
         if ( m_param.iter_display )
           std::cout << "EARLY EXIT CONDITION: Gradient Norm" << std::endl;
@@ -195,6 +195,14 @@ class FIRESolver {
 				xnorm = x.norm();
 				gnorm = m_grad.norm();
 
+        // Handle NaNs produced by the current iterate
+        if ( (fx != fx) || (xnorm != xnorm) || (gnorm != gnorm) )
+          throw std::invalid_argument("Current iterate generates NaNs");
+
+        // Handle Infs produced by the current interate
+        if ( (std::isinf(fx)) || std::isinf(xnorm) || std::isinf(gnorm) )
+          throw std::invalid_argument("Current iterate generates Infs");
+
  	      // Display iterative updates
 				if (m_param.iter_display) {
 
@@ -209,7 +217,7 @@ class FIRESolver {
 				}
 
 				// Convergence test -- gradient
-				if ( gnorm <= m_param.epsilon ) {
+				if ( gnorm <= m_param.epsilon || gnorm <= m_param.epsilon_rel * xnorm ) {
 
           if ( m_param.iter_display )
             std::cout << "CONVERGENCE CRITERION: Gradient Norm" << std::endl;

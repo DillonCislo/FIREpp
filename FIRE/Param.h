@@ -138,6 +138,12 @@ class FIREParam {
 		///
 		Scalar epsilon;
 
+    ///
+    /// The relative gradient convergence criteria. The algorithm is stopped
+    /// when ||dx|| < epsilon_rel * ||x||
+    ///
+    Scalar epsilon_rel;
+
 		///
 		/// Distance for delta-based convergence test.
 		/// This parameter determines the distance \f$d\f$ to compute the
@@ -200,6 +206,7 @@ class FIREParam {
 			boundary_conditions = FIRE_NO_BOUNDARY_CONDITIONS;
 			max_iterations = 0;
 			epsilon = Scalar(1e-5);
+      epsilon_rel = Scalar(1e-7);
 			past = 0;
 			delta = Scalar(0);
 			iter_display = false;
@@ -236,8 +243,10 @@ class FIREParam {
 				throw std::invalid_argument("Unsupported boundary condition");
 			if ( max_iterations < 0 )
 				throw std::invalid_argument("'max_iterations' must be >= 0");
-			if ( epsilon <= 0 )
-				throw std::invalid_argument("'epsilon' must be positive");
+			if ( epsilon < 0 )
+				throw std::invalid_argument("'epsilon' must be non-negative");
+      if ( epsilon_rel < 0 )
+        throw std::invalid_argument("'epsilon_rel' must be non-negative");
 			if ( past < 0 )
 				throw std::invalid_argument("'past' must be non-negative");
 			if ( delta < 0 )
